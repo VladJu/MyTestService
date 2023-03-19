@@ -9,12 +9,10 @@ class MainActivity : AppCompatActivity() {
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         binding.simpleService.setOnClickListener {
-            //2) Чтобы остановить снаружи (к приему по нажатию какой нибудь кнопки)
             stopService(MyForegroundService.newIntent(this))
             startService(MyService.newIntent(this, 10))
         }
@@ -22,6 +20,12 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.startForegroundService(this,
                 MyForegroundService.newIntent(this))
         }
+        //2
+        binding.intentService.setOnClickListener {
+            ContextCompat.startForegroundService(this,
+                MyIntentService.newIntent(this))
+        }
+        //запускать либо как обычный сервис
+        //startService(MyIntentService.newIntent(this))
     }
-
 }
