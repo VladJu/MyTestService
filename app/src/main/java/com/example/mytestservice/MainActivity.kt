@@ -14,16 +14,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         binding.simpleService.setOnClickListener {
+            //2) Чтобы остановить снаружи (к приему по нажатию какой нибудь кнопки)
+            stopService(MyForegroundService.newIntent(this))
             startService(MyService.newIntent(this, 10))
         }
-        //1
         binding.foregroundService.setOnClickListener {
             ContextCompat.startForegroundService(this,
                 MyForegroundService.newIntent(this))
         }
     }
-
-
-
 
 }

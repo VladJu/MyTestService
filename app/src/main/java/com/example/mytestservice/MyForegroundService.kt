@@ -20,17 +20,19 @@ class MyForegroundService : Service() {
         log("onCreate")
         createNotificationChannel()
         createNotification()
-        //передаем id уведомелния и само уведомелние
         startForeground(NOTIFICATION_ID, createNotification())
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         log("onStartCommand")
         coroutineScope.launch {
-            for (i in 0 until 100) {
+            for (i in 0 until 3) {
                 delay(1000)
                 log("Timer: $i")
             }
+            //1)останавливет Service
+            //его надо вызывать если сервис надо оставить изнутри, то есть внутри самого сервиса
+            stopSelf()
         }
         return START_STICKY
     }
