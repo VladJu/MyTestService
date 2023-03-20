@@ -2,6 +2,9 @@ package com.example.mytestservice
 
 import android.app.job.JobParameters
 import android.app.job.JobService
+import android.content.Intent
+import android.os.Build
+import android.os.PersistableBundle
 import android.util.Log
 import kotlinx.coroutines.*
 
@@ -12,42 +15,43 @@ class MyJobService : JobService() {
         super.onCreate()
         log("onCreate")
     }
-    //вызывается при старте сервиса и тут выполняется вся работа
-    //тут код выполняется на главном потоке
-    //код внутри метода мб синхроным (обычный метод который будет выполнятся последовательно)
-    //возвращаемый тип обозначает ваша работа все еще выполняется или нет
-    //в нашем случае мы запускаем корутину и выходим из метода onStartJob, но работа еще не завершена
-    // т.к мы выполняем асинхронные операции
-    //тогда возвращем true
-    //так скажем что сервис еще выполняется и мы сами заврешим работу когда это необходмо при помощи
-    // метода  jobFinished()
-    //если бы делали синхроную работу onStartJob обозначало что закночило выполнение
-    // тогда return false
+
     override fun onStartJob(params: JobParameters?): Boolean {
         log("onStartJob")
-        coroutineScope.launch {
-            for (i in 0 until 100) {
-                delay(1000)
-                log("Timer: $i")
+        //3 достаем сервисе из очереди
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            coroutineScope.launch {
+                // получаем из params вызывая dequeueWork() таким образом из очереди будет взять 1 сервис
+                var workItem = params?.dequeueWork()
+                //допустим мы запустили сервис 10 раз и все 10 сервисов будут положены в очередь
+                //тогда в цикле нам надо 10 раз вызывать метод dequeueWork() и получаем знач для стр
+                //деалем до тех пор пока dequeueWork() не вернет null, пока внутри параметров есть сервисы
+                //будем из workItem получать стр и запускать на выполнение
+                while (workItem != null) {
+                    //работаем уже с конкретным сервисом
+                    val page = workItem.intent.getIntExtra(PAGE, 0)
+                    for (i in 0 until 5) {
+                        delay(1000)
+                        log("Timer: $i Number page:$page")
+                    }
+                    //4 после того как цикл выполнен нам надо заврешить не всю работу,а завершить только
+                    //текущий сервис
+                    //означает что тот сервис который лежал в очерди завершил свою работу
+                    params?.completeWork(workItem)
+                    //после того как завершили работу мы снова достаем новый объект из очереди
+                    workItem = params?.dequeueWork()
+                }
+                //означает что весь сервис полностью завершил свою работу и никаких сервисов в очереди
+                //не осталось
+                jobFinished(params, false)
             }
-            //принимает 1 - JobParameters,
-            //2- обозначает надо ли запланировать выполнение сервиса заного
-            //Например: обнвовление данных в фоне, оно должно происходить постоянно с каким то таймаутом
-            //тогда return true - тогда сервис будет перезапущен через какое то время
-            // return false - перезапущен не будет
-            jobFinished(params,true)
         }
         return true
     }
-    //т.к на jobService можно устанавливать ограниченя например(сервис выполняется если устройство заряжается)
-    //и если мы отключаем его от зарядки, то сервис будет останволен и вызовется метод onStopJob()
-    //НО если мы сами остановили сервис с jobFinished(), то метод onStopJob() вызыван не будет
-    //ОН вызывается тогда, когда система убила наш сервис
+
     override fun onStopJob(params: JobParameters?): Boolean {
-       log("onStopJob")
-        //если хотим после убийства сервиса он был заного выполнен
+        log("onStopJob")
         return true
-        // иначе  return false
     }
 
     override fun onDestroy() {
@@ -55,12 +59,21 @@ class MyJobService : JobService() {
         coroutineScope.cancel()
         log("onDestroy")
     }
+
     private fun log(message: String) {
         Log.d("SERVICE_TAG", "MyJobService : $message")
     }
 
     companion object {
-         const val JOB_ID=1
+        const val JOB_ID = 1
+        private const val PAGE = "page"
+
+        //2
+        fun newIntent(page: Int): Intent {
+            return Intent().apply {
+                putExtra(PAGE, page)
+            }
+        }
     }
 
 }
