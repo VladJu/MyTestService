@@ -24,9 +24,9 @@ class MyJobService : JobService() {
     //если бы делали синхроную работу onStartJob обозначало что закночило выполнение
     // тогда return false
     override fun onStartJob(params: JobParameters?): Boolean {
-        log("onStartCommand")
+        log("onStartJob")
         coroutineScope.launch {
-            for (i in 0 until 3) {
+            for (i in 0 until 100) {
                 delay(1000)
                 log("Timer: $i")
             }
@@ -56,7 +56,11 @@ class MyJobService : JobService() {
         log("onDestroy")
     }
     private fun log(message: String) {
-        Log.d("SERVICE_TAG", "MyService : $message")
+        Log.d("SERVICE_TAG", "MyJobService : $message")
+    }
+
+    companion object {
+         const val JOB_ID=1
     }
 
 }
