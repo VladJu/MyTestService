@@ -34,19 +34,18 @@ class MainActivity : AppCompatActivity() {
         binding.jobScheduler.setOnClickListener {
             val componentName= ComponentName(this,MyJobService::class.java)
 
-            //содержит все требования для нашего сервиса(ограничения)
             val jobInfo=JobInfo.Builder(MyJobService.JOB_ID,componentName)
                 .setRequiresCharging(true)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                 .build()
 
             val jobScheduler = getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
-            //1) 2 параметром надо передать объект jonWorkItem -это объект в который необходимо передать
-            //интент на запуск данного сервиса
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                //2.1
                 val intent = MyJobService.newIntent(page++)
                 jobScheduler.enqueue(jobInfo, JobWorkItem(intent))
+            } else {
+                startService(MyIntentServiceCombiningJobService.newIntent(this,page++))
             }
         }
     }
