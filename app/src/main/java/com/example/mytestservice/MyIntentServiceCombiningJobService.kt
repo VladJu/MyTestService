@@ -31,7 +31,7 @@ class MyIntentServiceCombiningJobService : IntentService(NAME) {
     }
 
     private fun log(message: String) {
-        Log.d("SERVICE_TAG", "MyForegroundService : $message")
+        Log.d("SERVICE_TAG", "MyIntentServiceCombiningJobService : $message")
     }
 
     companion object {

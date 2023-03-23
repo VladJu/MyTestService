@@ -25,7 +25,7 @@ class MyIntentService : IntentService(NAME) {
     //код внутри этого метода будет выполнятся в другом потоке
     override fun onHandleIntent(intent: Intent?) {
         log("onHandleIntent")
-        for (i in 0 until 3) {
+        for (i in 0 until 6) {
             Thread.sleep(1000)
             log("Timer: $i")
         }
