@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity() {
             //в случае enqueueUniqueWork() можем самостоятельно указать что делать  если была попытка
             //запустить воркер который уже запущен
             workManager.enqueueUniqueWork(
-                MyWork.WORKER_NAME,
+                MyWorker.WORKER_NAME,
                 //передаем что делать если работа уже запущена их 4 варианта:
                 //отличии APPEND и APPEND_OR_REPLACE отличие в том что
                 //как будут реагировать воркеры лежащие в очереди на то что какой то ворекр был завершен
@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
                 //она завершилась
                 //Также данный реквест принимаем все параметры (PAGE), а также огранчиение на работу Ворекра
                 //вроде того как в JobService()
-                MyWork.makeRequest(page++)
+                MyWorker.makeRequest(page++)
 
             )
         }
