@@ -5,7 +5,7 @@ import android.content.Intent
 import android.util.Log
 import androidx.work.*
 
-class MyWork(context: Context, private val workerParameters: WorkerParameters) : Worker(
+class MyWorker(context: Context, private val workerParameters: WorkerParameters) : Worker(
     context,
     workerParameters
 ) {
@@ -41,7 +41,7 @@ class MyWork(context: Context, private val workerParameters: WorkerParameters) :
 
         //3 создаем экземпляр реквеста
         fun makeRequest(page: Int): OneTimeWorkRequest {
-            return OneTimeWorkRequestBuilder<MyWork>()
+            return OneTimeWorkRequestBuilder<MyWorker>()
                 //3.1) положим номер стр
                 //workDataOf() - принмиает в качестве параметра объект Pair - это объект который хранит
                 //один ключ / одно значение в итоге получим объект Data
