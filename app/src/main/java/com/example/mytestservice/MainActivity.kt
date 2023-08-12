@@ -4,8 +4,10 @@ import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.app.job.JobWorkItem
 import android.content.ComponentName
+import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.work.ExistingWorkPolicy
@@ -18,6 +20,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var page = 0
+
+    //6)Интерфейс взаимодействия активити и сервиса
+    private val serviceConnetction = object : ServiceConnection {
+        //7)Вызовется когда подключимся к ForegroundService
+        //Прилетит в него IBinder,а релизация его возьмется из метода onBind() в ForegroundService
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            //8 Приведем к нашему типу т.к там есть метод необходимый нам
+            val binder = (service as? MyForegroundService.LocalBinder) ?: return
+            //9 Получаем экземпляр сервиса и можем работать с ним
+            val foregroundService = binder.getService()
+            //10 Устанавливаем прогресс в прогрессбар
+            foregroundService.onProgressChanged={ progress ->
+                binding.progressBarLoading.progress = progress
+            }
+
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -88,8 +112,27 @@ class MainActivity : AppCompatActivity() {
                 //Также данный реквест принимаем все параметры (PAGE), а также огранчиение на работу Ворекра
                 //вроде того как в JobService()
                 MyWorker.makeRequest(page++)
-
             )
         }
+    }
+
+    //6 подписываемся за сервер
+    override fun onStart() {
+        super.onStart()
+        //1 параметр - intent,
+        //2 параметр - serviceConnection - интерфейс который определят взаимодействие активити и сервиса
+        //3 параметр - флаг
+        bindService(
+            MyForegroundService.newIntent(this),
+            //реализация в п-6)
+            serviceConnetction,
+            0
+        )
+    }
+
+    override fun onStop() {
+        super.onStop()
+        //11) Отписываемся от сервиса, но работу сервиса это никак не влияет
+        unbindService(serviceConnetction)
     }
 }

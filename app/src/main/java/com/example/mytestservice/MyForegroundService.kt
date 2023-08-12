@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -15,23 +16,40 @@ import kotlinx.coroutines.*
 class MyForegroundService : Service() {
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
+
+    private val notificationManager by lazy {
+        getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+    }
+
+
+    private val notificationBuilder by lazy {
+        createNotificationBuilder()
+    }
+
+    //1)Слушатель на изменение прогресса
+    var onProgressChanged: ((Int)->Unit)? = null
+
     override fun onCreate() {
         super.onCreate()
         log("onCreate")
         createNotificationChannel()
-        createNotification()
-        startForeground(NOTIFICATION_ID, createNotification())
+        startForeground(NOTIFICATION_ID, notificationBuilder.build())
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         log("onStartCommand")
         coroutineScope.launch {
-            for (i in 0 until 3) {
+            for (i in 0..100 step 5) {
                 delay(1000)
+                val notification = notificationBuilder
+                    .setProgress(100, i, false)
+                    .build()
+                notificationManager.notify(NOTIFICATION_ID,notification )
+                //2)Оповещаем слушатель об уведомлении
+                onProgressChanged?.invoke(i)
                 log("Timer: $i")
             }
-            //1)останавливет Service
-            //его надо вызывать если сервис надо оставить изнутри, то есть внутри самого сервиса
+
             stopSelf()
         }
         return START_STICKY
@@ -43,8 +61,9 @@ class MyForegroundService : Service() {
         log("onDestroy")
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        TODO("Not yet implemented")
+    //4)
+    override fun onBind(intent: Intent?): IBinder {
+        return LocalBinder()
     }
 
     private fun log(message: String) {
@@ -53,7 +72,6 @@ class MyForegroundService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val notificationChannel = NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
@@ -63,12 +81,17 @@ class MyForegroundService : Service() {
         }
     }
 
-    private fun createNotification(): Notification {
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("AppJuke")
-            .setContentText("Your get message")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .build()
+    //1)
+    private fun createNotificationBuilder() = NotificationCompat.Builder(this, CHANNEL_ID)
+        .setContentTitle("AppJuke")
+        .setContentText("Your get message")
+        .setSmallIcon(R.drawable.ic_launcher_foreground)
+        .setProgress(100, 0, false)
+        .setOnlyAlertOnce(true)
+
+    //5)Создадим свой Binder
+    inner class LocalBinder : Binder(){
+        fun getService() = this@MyForegroundService
     }
 
     companion object {
